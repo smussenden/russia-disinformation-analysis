@@ -14,8 +14,9 @@ _Completion Timetable_
 ## Phase 1: Build RT Scraper
 
 _Learning Goals_
-* Learn to build a web scraper
-* Learn to create a database of unstructured data
+* Learn the technical skills necessary to:
+  * Build a web scraper and associated database
+  * Analyze the data gathered
 
 _Deliverables_
 * A web scraper deployable to RT.com that will sensibly gather and store articles and their associated metadata
@@ -29,13 +30,13 @@ _Learning Goals_
 * Portfolio: Newsworthy findings based on analysis, preferably incorporated into a story
 
 _Deliverables_
-* Statistical information about RT America's articles from 2015 to the present
+* Statistical information about themes present in RT America's articles from 2015 to the present (details TBD based on exploratory analysis and needs of JOUR-628N)
 
 ## Phase 3: Add Updating Feature and Build Ongoing Tool
 
 _Learning Goals_
 * Update the scraper with the ability to update a database on a schedule
-* Portfolio: Produce a useable tool for the industry
+* Portfolio: Useable tool for the industry
 
 _Deliverables_
 * a. Updated version of the RT scraper that can update a database on a schedule without re-scraping old information
