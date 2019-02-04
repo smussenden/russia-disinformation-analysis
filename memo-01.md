@@ -1,4 +1,4 @@
-# Memo - Statement of Goals
+# Memo - Statement of Project Goals
 #### Feb. 4, 2019
 
 This project will focus on the materials produced by the Russia-based news outlet, RT. First, I will build a web-scraper to collect the organization's output. Then, I will analyze that collected data in a historical context, looking at trends in the organization's coverage. As a final step, I will revisit the original program to add the future-facing ability to continually update its database, then build out a new tool to track trends in RT's reporting as they emerge. This final step will have particular relevance in the 2020 elections, allowing reporters to see in real time what themes RT focuses on and what it interjects into the national discourse.
