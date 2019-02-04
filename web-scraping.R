@@ -49,3 +49,35 @@ guidelines <- read_html('https://www.spj.org/ethicscode.asp') %>%
   rename(Rules = ".")
 guidelines <- guidelines[-1,] # Remove the first row, which isn't one of the rules
 
+
+# Faffing about -----------------------------------------------------------
+
+# Import data mentioning Trump from 2015 through 2016, dowloaded from io-archive.org
+russia <- read_csv("/Volumes/Passport/UMD/natsec/download_csv.csv")
+
+# Count how many posts each user made
+russia %>%
+  group_by(name) %>%
+  #summarize(n = n())
+  count(name, sort = TRUE)
+
+#Count the number of likes each user received on all posts
+russia %>%
+  group_by(name) %>%
+  summarize(likes = sum(like_count)) %>%
+  arrange(desc(likes))
+  
+
+# Scraping NYT’s social media policy --------------------------------------
+
+.StoryBodyCompanionColumn
+
+nyt_social_guidelines <- read_html('https://www.nytimes.com/2017/10/13/reader-center/social-media-guidelines.html') %>%
+  html_nodes('.StoryBodyCompanionColumn') %>%
+  html_text() %>%
+  tibble() %>%
+  rename(Content = ".")
+
+#setwd("/Volumes/Passport/Programming-Lessons/r-for-data-science-lessons")
+nyt_social_guidelines %>%
+  write.csv("/Volumes/Passport/UMD/thesis/nyt_social_guidelines.csv")
