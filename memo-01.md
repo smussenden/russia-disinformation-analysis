@@ -3,8 +3,6 @@
 
 This project will focus on the materials produced by the Russia-based news outlet, RT. First, I will build a web-scraper to collect the organization's output. Then, I will analyze that collected data in a historical context, looking at trends in the organization's coverage. As a final step, I will revisit the original program to add the future-facing ability to continually update its database, then build out a new tool to track trends in RT's reporting as they emerge. This final step will have particular relevance in the 2020 elections, allowing reporters to see in real time what themes RT focuses on and what it interjects into the national discourse.
 
-The goals for this semester's project are to learn the technical skills necessary to build a web scraper and analyze the data gathered.
-
 _Completion Timetable_
 * Phase 1: Spring break
 * Phase 2: Spring semester end
@@ -25,7 +23,7 @@ _Deliverables_
 ## Phase 2: Historical Analysis
 
 _Learning Goals_
-* Practice mining natural language
+* Learn the technical and logical skills necessary to mine natural language
 * Use mined data in a story
 * Portfolio: Newsworthy findings based on analysis, preferably incorporated into a story
 
@@ -35,8 +33,9 @@ _Deliverables_
 ## Phase 3: Add Updating Feature and Build Ongoing Tool
 
 _Learning Goals_
-* Update the scraper with the ability to update a database on a schedule
+* Further build on technical skills necessary to update the web-scraper
 * Portfolio: Useable tool for the industry
+* (Portfolio: Story based on findings)
 
 _Deliverables_
 * a. Updated version of the RT scraper that can update a database on a schedule without re-scraping old information
