@@ -1,13 +1,13 @@
-# Exploring web scraping using R
-# Started Jan. 31, 2019
+# Scraping the Maryland General Assembly's bill list pages
+# on http://mgaleg.maryland.gov
+
+# Started Feb. 5, 2019
 # By Roxanne Ready
 
 #install.packages("rvest")
 #install.packages("tidyverse")
-#install.packages("XML")
 library(rvest)
 library(tidyverse)
-library(XML)
 
 # SHORTCUTS
 # cmd-shft-m:     %>% 
@@ -21,37 +21,7 @@ library(XML)
 
 # GAM Scraper -------------------------------------------------------------
 
-# Define the pages to scrape
-jackson_leg_url <- 'http://mgaleg.maryland.gov/webmga/frmMain.aspx?stab=02&pid=sponpage&id=jackson01&tab=subject6&ys=2019RS'
-pg_county_del_leg_url <- 'http://mgaleg.maryland.gov/webmga/frmMain.aspx?pid=sponpage&tab=subject3&id=pgcodel&stab=02&ys=2019RS'
-
-# Choose the current page
-url <- jackson_leg
-
-# Function to scrape bill numbers and parse them into HB/SB
-get_bill_numbers <- function(url) {
-  bill_number <- read_html(url) %>%
-    html_nodes('.grid td:nth-child(1)') %>%
-    html_text() %>%
-    str_replace("\\(", "") %>%
-    str_replace("\\)", "") %>%
-    str_replace("\\s", "") %>%
-    str_replace("\\t", "") %>%
-    str_replace_all("\\s+", " ")
-  
-  bills <- tibble('HB_Num', 'SB_Num')
-  
-  for (i in seq_along(bill_number)) {
-    bills[i,1] <- str_extract(bill_number[i], "\\bHB\\w+")
-    bills[i,2] <- str_extract(bill_number[i], "\\bSB\\w+")
-  }
-  
-  return(bills)
-}
-#View(get_bill_numbers(url))
-
-
-# Function to scrape all bill info and store it in a tibble
+# Function to scrape all bill info on a page and store it in a tibble
 get_bills <- function(url) {
   
   working_html <- read_html(url)
@@ -99,11 +69,11 @@ get_bills <- function(url) {
     as.factor()
   
   # Include the direct link to the legislation's page
-  # Currently, when writing to CSV, & is forced to &amp making this field useless for export
   bill_link_partial <- working_html %>%
     html_nodes('.grid td:nth-child(1)') %>%
     str_extract("(\\<a.*?\\>).*?(\\<\\/a.*?\\>)") %>% # Everything between <a and </a>, inlclusive
-    str_extract("(?<=\\\")([^\\\"\\\"]*)(?=\\\")") # Capture text bewteen "s, non-inclusive
+    str_extract("(?<=\\\")([^\\\"\\\"]*)(?=\\\")") %>% # Capture text bewteen "s, non-inclusive
+    str_replace_all("&amp;", "\\&") # add escape characters to &s to store them literally
     
   bill_link <- str_c("http://mgaleg.maryland.gov/webmga/", bill_link_partial)
   
@@ -114,11 +84,17 @@ get_bills <- function(url) {
   return(bill_info)
 }
 
+# Define the pages to scrape
+jackson_leg_url <- 'http://mgaleg.maryland.gov/webmga/frmMain.aspx?stab=02&pid=sponpage&id=jackson01&tab=subject6&ys=2019RS'
+
+pg_county_del_leg_url <- 'http://mgaleg.maryland.gov/webmga/frmMain.aspx?pid=sponpage&tab=subject3&id=pgcodel&stab=02&ys=2019RS'
+
+# Get Jackson's bills
 jackson_legislation <- get_bills(jackson_leg_url)
+str(jackson_legislation) # Check
+write_csv(jackson_legislation, "jackson_legislation.csv") # Save to csv file
+
+# Get PG County Del sponsored bills
 pg_county_del_legislation <- get_bills(pg_county_del_leg_url)
-
-write_csv(jackson_legislation, "jackson_legislation.csv")
-write.csv(jackson_legislation, "jackson_legislation.csv", row.names = FALSE)
-
-
-write_csv(pg_county_del_legislation, "pg_county_del_legislation.csv", fileEncoding = "")
+str(pg_county_del_legislation) # Check
+write_csv(pg_county_del_legislation, "pg_county_del_legislation.csv") # Save to csv file
