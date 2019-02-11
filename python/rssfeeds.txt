@@ -1,0 +1,9 @@
+http://feeds.foxnews.com/foxnews/latest
+http://feeds.foxnews.com/foxnews/politics
+https://abcnews.go.com/abcnews/topstories
+https://abcnews.go.com/abcnews/politicsheadlines
+https://www.rt.com/rss/
+http://feeds.washingtonpost.com/rss/politics
+http://rss.nytimes.com/services/xml/rss/nyt/Politics.xml
+http://rss.nytimes.com/services/xml/rss/nyt/US.xml
+
