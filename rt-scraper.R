@@ -1,7 +1,7 @@
-# Scraping the Maryland General Assembly's bill list pages
-# on http://mgaleg.maryland.gov
+# Scraping RT's articles to create a corpus
+# from https://www.rt.com/
 
-# Started Feb. 5, 2019
+# Started Feb. 12, 2019
 # By Roxanne Ready
 
 #install.packages("rvest")
@@ -28,6 +28,22 @@ library(tidyRSS)
 View(tidyfeed("https://www.rt.com/rss/usa/"))
 # Define the page to scrape
 rt_url <- 'https://www.rt.com/usa/449757-'
+rt_url <- 'https://www.rt.com/op-ed/449734-'
+#op-ed/449734-
+
+# Function to test html node existence ----------------------------------------------
+html_exists <- function(url, element) {
+  if(length(html_nodes(url, element))){
+    value <- TRUE
+  } else {
+    value <- FALSE
+  }
+  
+  return(value)
+}
+# Test the function
+#html_exists(read_html('https://www.rt.com/usa/449757-'), '.blog-autor__summary_article') # Should return FALSE
+#html_exists(read_html('https://www.rt.com/op-ed/449734-'), '.blog-autor__summary_article') # Should return TRUE
 
 # Scraper code ------------------------------------------------------------
 
@@ -44,10 +60,14 @@ get_article_content <- function(url) {
   
   # Author (if applicable)
   # .blog-autor__summary_article
-  # if (!is.null(html_nodes(working_html, '.blog-autor__summary_article'))) {
-  #    author <- working_html %>%
-  #      html_nodes('.blog-autor__summary_article') %>%
-  #      html_text()
+  # KI: Pulls entire bio instead of just name
+  if (html_exists(working_html, '.blog-autor__summary_article')) {
+    author <- working_html %>%
+      html_nodes('.blog-autor__summary_article') %>%
+      html_text()
+  } else {
+    author <- "NA"
+  }
   
   # Publication date
   # .date_article-header:nth-child(1)
@@ -66,9 +86,27 @@ get_article_content <- function(url) {
   
   # Date edited (if applicable)
   # .date_article-header:nth-child(2)
+  if (html_exists(working_html, '.date_article-header:nth-child(2)')) {
+    edited_date <- working_html %>%
+      html_nodes('.date_article-header:nth-child(2)') %>%
+      html_text() %>%
+      str_replace("Edited time: ", "") %>%
+      str_replace("(\\s\\d{2}\\:\\d{2})", "")
+  } else {
+    edited_date <- "NA"
+  }
   
   # Time edited (if applicable)
   # .date_article-header:nth-child(2)
+  if (html_exists(working_html, '.date_article-header:nth-child(2)')) {
+    edited_time <- working_html %>%
+      html_nodes('.date_article-header:nth-child(2)') %>%
+      html_text() %>%
+      str_replace("Edited time: ", "") %>%
+      str_extract("(\\d{2}\\:\\d{2})")
+  } else {
+    edited_time <- "NA"
+  }
   
   # Summary/lede
   lede <- working_html %>%
@@ -82,18 +120,35 @@ get_article_content <- function(url) {
     html_nodes('.article__text p') %>%
     html_text() %>%
     str_replace_all("\\n", "")
-  
-  # Article media links
-  
-  # Article captions
-  # .media__title_arcticle span
-  
+
   # Embedded tweets
   # .EmbeddedTweet-tweet OR .rtcode (?)
   
+  # Scrape unique ID# of article
+  id <- url %>%
+    str_extract("(?<=\\/)([^\\/\\/]\\d*)(?=\\-)")
+  
+  
   # Store scraped data in a tibble
-  article_content <- tibble("Title" = title, "Date_Published" = pub_date, "Time_Published" = pub_time, "Summary_Text" = lede, "Article_Text" = text)
-  #article_content <- tibble("Title" = title)
+  article_content <- tibble(
+    "ID" = id, 
+    "Title" = title, 
+    "Author" = author,
+    "Date_Published" = pub_date, 
+    "Time_Published" = pub_time, 
+    "Date_Edited" = edited_date,
+    "Time_Edited" = edited_time,
+    "Summary_Text" = lede, 
+    "Article_Text" = text
+    )
+  
+  # Quick tester
+  #article_content <- tibble("Test" = id)
+  
+  # Number the rows
+  article_content <- article_content %>%
+    mutate(Row_Num = row_number()) %>%
+    select(Row_Num, everything())
   
   return(article_content)
 }
@@ -106,3 +161,4 @@ get_article_content <- function(url) {
 # Scrape the content
 View(get_article_content(rt_url))
 str(get_article_content(rt_url))
+write_csv(get_article_content(rt_url), "data/rt_content.csv") # Save to csv file
