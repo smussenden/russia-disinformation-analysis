@@ -1,5 +1,6 @@
 # Scraping RT's articles to create a corpus
 # from https://www.rt.com/
+# Process memos: https://docs.google.com/document/d/1kWMcIDzO1LKgzjhkboyfpuRLEhlPiQ69DU3C9Fpjt5k/edit
 
 # Started Feb. 12, 2019
 # By Roxanne Ready
