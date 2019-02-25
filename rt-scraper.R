@@ -26,13 +26,14 @@ library(tidyRSS)
 # Define variables --------------------------------------------------------
 
 # Overview RT's RSS feed
-View(tidyfeed("https://www.rt.com/rss/usa/"))
-# Define the page to scrape
+# View(tidyfeed("https://www.rt.com/rss/"))
+# 
+# # Define the page to scrape
 rt_url <- 'https://www.rt.com/usa/449757-'
-rt_url <- 'https://www.rt.com/op-ed/449734-'
-#op-ed/449734-
+# rt_url <- 'https://www.rt.com/op-ed/449734-'
 
 # Function to test html node existence ----------------------------------------------
+
 html_exists <- function(url, element) {
   if(length(html_nodes(url, element))){
     value <- TRUE
@@ -46,12 +47,15 @@ html_exists <- function(url, element) {
 #html_exists(read_html('https://www.rt.com/usa/449757-'), '.blog-autor__summary_article') # Should return FALSE
 #html_exists(read_html('https://www.rt.com/op-ed/449734-'), '.blog-autor__summary_article') # Should return TRUE
 
-# Scraper code ------------------------------------------------------------
+# Function to get and store article data ------------------------------------------------------------
 
-# Function to get and store article data
 get_article_content <- function(url) {
   
   working_html <- read_html(url)
+  
+  # Pull unique ID# of article
+  id <- url %>%
+    str_extract("(?<=\\/)([^\\/\\/]\\d*)(?=\\-)")
   
   # Article title
   title <- working_html %>%
@@ -61,11 +65,11 @@ get_article_content <- function(url) {
   
   # Author (if applicable)
   # .blog-autor__summary_article
-  # KI: Pulls entire bio instead of just name
-  if (html_exists(working_html, '.blog-autor__summary_article')) {
+  if (html_exists(working_html, '.blog-autor__cover')) {
     author <- working_html %>%
-      html_nodes('.blog-autor__summary_article') %>%
-      html_text()
+      html_nodes('.blog-autor__cover') %>%
+      str_extract("(?<=(authors\\/)).*?(?=\\/\\\")") %>%
+      str_replace("-", " ")
   } else {
     author <- "NA"
   }
@@ -115,20 +119,19 @@ get_article_content <- function(url) {
     html_text()
   
   # Article text (by paragraph)
-  # KI: pulls embedded tweets (exclude .rtcode content)
   # KI: stores empty p's in cells
   text <- working_html %>%
     html_nodes('.article__text p') %>%
     html_text() %>%
     str_replace_all("\\n", "")
+  
+  # Article text by paragraph including HTML
+  # KI: Still strips CSS flags
+  raw_p <- working_html %>%
+    html_nodes('.article__text p')
 
   # Embedded tweets
   # .EmbeddedTweet-tweet OR .rtcode (?)
-  
-  # Scrape unique ID# of article
-  id <- url %>%
-    str_extract("(?<=\\/)([^\\/\\/]\\d*)(?=\\-)")
-  
   
   # Store scraped data in a tibble
   article_content <- tibble(
@@ -140,7 +143,8 @@ get_article_content <- function(url) {
     "Date_Edited" = edited_date,
     "Time_Edited" = edited_time,
     "Summary_Text" = lede, 
-    "Article_Text" = text
+    "Article_Text" = text,
+    "HTML" = raw_p
     )
   
   # Quick tester
@@ -148,18 +152,21 @@ get_article_content <- function(url) {
   
   # Number the rows
   article_content <- article_content %>%
-    mutate(Row_Num = row_number()) %>%
-    select(Row_Num, everything())
+    mutate(Graph_Num = row_number()) %>%
+    select(Graph_Num, everything()) %>% # rearanges to put Graph_Num first
+    mutate("Is_Tweet" = ifelse(str_detect(HTML, "dir=\"ltr\""), "Is_Tweet" <- TRUE, "Is_Tweet" <- FALSE)) %>% # flags whether native content or tweet
+    select(-one_of("HTML")) # drops HTML col
   
   return(article_content)
 }
+# Test the function
+# View(get_article_content(rt_url))
+# str(get_article_content(rt_url))
+# write_csv(get_article_content(rt_url), "data/rt_content.csv") # Save to csv file
 
-# Function to access each web page and combine all articles into a corpus
+# Function to access each web page and combine all articles into a corpus -------------------------
 # lapply?
+
 
 # Implementation ----------------------------------------------------------
 
-# Scrape the content
-View(get_article_content(rt_url))
-str(get_article_content(rt_url))
-write_csv(get_article_content(rt_url), "data/rt_content.csv") # Save to csv file
