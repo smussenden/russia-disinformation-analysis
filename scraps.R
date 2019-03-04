@@ -1,6 +1,8 @@
 library(rvest)
 library(tidyverse)
-library(tidyRSS)
+library(httr)
+#library(tidyRSS)
+#library(jsonlite)
 
 # Links -----------------------
 # https://gist.github.com/abelsonlive/3769469 #best practices using ldply
@@ -160,6 +162,19 @@ View(test_fun('https://www.rt.com/usa/449757-'))
 ##############################
 ##############################
 
+# Function to check for valid URLs
+url_works <- function(url){
+  tryCatch(
+    # Checks page's status code for success (L = integer). Other status codes: https://httpstatuses.com
+    identical(status_code(HEAD(url)),200L), # Returns logical based on status code.
+    error = function(e){
+      FALSE # Returns FALSE if an error
+    })
+}
+# Test the function
+url_works("https://www.rt.com/news/3-") # Should return TRUE
+url_works("https://www.rt.com/news/1-") # Should return FALSE
+
 # Compile a list of URLs, test them for 404, store in df
 compile_urls <- function(partial_url, num = 100) {
   
@@ -168,20 +183,14 @@ compile_urls <- function(partial_url, num = 100) {
   
   # Compile a list of URLs to test
   for(i in 1:num) {
-    urls[i,"Page_URL"] <- paste0(partial_url, i, "-")
+    test_url <- paste0(partial_url, i, "-") # Assign URL to variable
+    
+    if(url_works(test_url)){ # Test for valid URLs
+      urls[i,"Page_URL"] <- test_url # Add to df
+    } 
   }
   
-  if(tryCatch(read_html("https://www.rt.com/news/1-"))){
-    print("error")
-  } else {
-    print("not error")
-  }
-  
-  # Test urls for 404 errors
-  for(i in 1:num) {
-    tryCatch(read_html(urls[i, "Page_URL"]))
-  }
-  # Or maybe this should go in the actual implementation of the scraper, per https://gist.github.com/abelsonlive/3769469
+  urls <- urls[rowSums(is.na(urls)) != ncol(urls),]
   
   # Return the final df of useable links
   return(urls)
@@ -190,20 +199,17 @@ compile_urls <- function(partial_url, num = 100) {
 View(compile_urls("https://www.rt.com/news/", 55))
 
 
+# Take compiled URLs and feed to scraper function
 
-# for(i in 0:5089) {
-#   webpage <- read_html(paste0("https://bra.areacodebase.com/number_type/M?page=", i))
-#   data <- webpage %>%
-#     html_nodes("table") %>%
-#     .[[1]] %>% 
-#     html_table()
-# }
+# store some urls
+testurls <- compile_urls("https://www.rt.com/news/", 20)
 
-
-
-# Either:
-# A) Build list of URLs, then loop through them (feed to lapply?)
-# B) afdhsjkfhsjklhjkladfs
-
-x<-3
-tryCatch(x>5)
+# Shows that two tibbles created with get_article_content() can be stacked using bind_rows()
+View(bind_rows(
+  get_article_content(testurls[[1,"Page_URL"]]),
+  get_article_content(testurls[[2,"Page_URL"]])
+))
+testurls %>%
+  summarise(testurls, n = n())
+seq_along(testurls)
+nrow(testurls)

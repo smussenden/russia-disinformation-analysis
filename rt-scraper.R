@@ -32,7 +32,9 @@ library(tidyRSS)
 rt_url <- 'https://www.rt.com/usa/449757-'
 # rt_url <- 'https://www.rt.com/op-ed/449734-'
 
-# Function to test html node existence ----------------------------------------------
+## FUNCTIONS ## -------------------------------------------------------------------------------------
+
+# Test html node existence ----------------------------------------------
 
 html_exists <- function(url, element) {
   if(length(html_nodes(url, element))){
@@ -47,7 +49,7 @@ html_exists <- function(url, element) {
 #html_exists(read_html('https://www.rt.com/usa/449757-'), '.blog-autor__summary_article') # Should return FALSE
 #html_exists(read_html('https://www.rt.com/op-ed/449734-'), '.blog-autor__summary_article') # Should return TRUE
 
-# Function to get and store article data ------------------------------------------------------------
+# Get and store article data ------------------------------------------------------------
 
 get_article_content <- function(url) {
   
@@ -164,9 +166,59 @@ get_article_content <- function(url) {
 # str(get_article_content(rt_url))
 # write_csv(get_article_content(rt_url), "data/rt_content.csv") # Save to csv file
 
-# Function to access each web page and combine all articles into a corpus -------------------------
-# lapply?
+# Check for valid URLs ------------------------------------------------
+url_works <- function(url){
+  tryCatch(
+    # Checks page's status code for success (L = integer). Other status codes: https://httpstatuses.com
+    identical(status_code(HEAD(url)),200L), # Returns logical based on status code.
+    error = function(e){
+      FALSE # Returns FALSE if an error
+    })
+}
+# Test the function
+# url_works("https://www.rt.com/news/3-") # Should return TRUE
+# url_works("https://www.rt.com/news/1-") # Should return FALSE
 
+# Compile in a data frame a list of valid URLs ------------------------------------------------
+compile_urls <- function(partial_url, num = 100) {
+  
+  # Initialize a df
+  urls <- tibble()
+  
+  # Compile a list of URLs to test
+  for(i in 1:num) {
+    test_url <- paste0(partial_url, i, "-") # Create full URl and assign it to a variable
+    
+    if(url_works(test_url)){ # Test if URL is valid
+      urls[i,"Page_URL"] <- test_url # Add to df
+    } 
+  }
+  
+  urls <- urls[rowSums(is.na(urls)) != ncol(urls),]
+  
+  # Return the final df of useable links
+  return(urls)
+}
+# Test the function
+# View(compile_urls("https://www.rt.com/news/", 20))
 
-# Implementation ----------------------------------------------------------
+# Run get_article_content() on each element of a df -------------------------
+loop_it <- function(url_df) {
+  
+  data <- get_article_content(url_df[[1,"Page_URL"]])
+  for(i in 2:nrow(url_df)) {
+    data <- bind_rows(data, get_article_content(url_df[[i,"Page_URL"]]))
+  }
+  return(data)
+}
+# Test the function
+# suppressWarnings(View(loop_it(testurls)))
+
+# IMPLEMENTATION ## ----------------------------------------------------------
+
+# Save working news URLs to csv file
+#write_csv(compile_urls("https://www.rt.com/news/", 500000), "data/rt_newsURLs.csv") 
+
+# Save working op-ed URLs to csv file
+#write_csv(compile_urls("https://www.rt.com/news/", 500000), "data/rt_op-edURLs.csv") 
 
