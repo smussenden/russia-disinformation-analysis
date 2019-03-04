@@ -208,6 +208,7 @@ loop_it <- function(url_df) {
   data <- get_article_content(url_df[[1,"Page_URL"]])
   for(i in 2:nrow(url_df)) {
     data <- bind_rows(data, get_article_content(url_df[[i,"Page_URL"]]))
+    Sys.sleep(sample(seq(1, 3, by=0.001), 1))
   }
   return(data)
 }
@@ -217,7 +218,7 @@ loop_it <- function(url_df) {
 # IMPLEMENTATION ## ----------------------------------------------------------
 
 # Save working news URLs to csv file
-#write_csv(compile_urls("https://www.rt.com/news/", 500000), "data/rt_newsURLs.csv") 
+write_csv(compile_urls("https://www.rt.com/news/", 500000), "data/rt_newsURLs.csv") 
 
 # Save working op-ed URLs to csv file
 #write_csv(compile_urls("https://www.rt.com/news/", 500000), "data/rt_op-edURLs.csv") 
