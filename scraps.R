@@ -171,6 +171,12 @@ compile_urls <- function(partial_url, num = 100) {
     urls[i,"Page_URL"] <- paste0(partial_url, i, "-")
   }
   
+  if(tryCatch(read_html("https://www.rt.com/news/1-"))){
+    print("error")
+  } else {
+    print("not error")
+  }
+  
   # Test urls for 404 errors
   for(i in 1:num) {
     tryCatch(read_html(urls[i, "Page_URL"]))
@@ -198,3 +204,6 @@ View(compile_urls("https://www.rt.com/news/", 55))
 # Either:
 # A) Build list of URLs, then loop through them (feed to lapply?)
 # B) afdhsjkfhsjklhjkladfs
+
+x<-3
+tryCatch(x>5)
