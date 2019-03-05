@@ -11,6 +11,7 @@
 library(rvest)
 library(tidyverse)
 library(tidyRSS)
+library(httr)
 
 # SHORTCUTS
 # cmd-shft-m:     %>% 
@@ -131,7 +132,7 @@ get_article_content <- function(url) {
   # KI: Still strips CSS flags
   raw_p <- working_html %>%
     html_nodes('.article__text p')
-
+  
   # Embedded tweets
   # .EmbeddedTweet-tweet OR .rtcode (?)
   
@@ -147,7 +148,7 @@ get_article_content <- function(url) {
     "Summary_Text" = lede, 
     "Article_Text" = text,
     "HTML" = raw_p
-    )
+  )
   
   # Quick tester
   #article_content <- tibble("Test" = id)
@@ -180,13 +181,13 @@ url_works <- function(url){
 # url_works("https://www.rt.com/news/1-") # Should return FALSE
 
 # Compile in a data frame a list of valid URLs ------------------------------------------------
-compile_urls <- function(partial_url, num = 100) {
+compile_urls <- function(partial_url, start = 1, end = 100) {
   
   # Initialize a df
   urls <- tibble()
   
   # Compile a list of URLs to test
-  for(i in 1:num) {
+  for(i in start:end) {
     test_url <- paste0(partial_url, i, "-") # Create full URl and assign it to a variable
     
     if(url_works(test_url)){ # Test if URL is valid
@@ -200,7 +201,7 @@ compile_urls <- function(partial_url, num = 100) {
   return(urls)
 }
 # Test the function
-# View(compile_urls("https://www.rt.com/news/", 20))
+# View(compile_urls("https://www.rt.com/news/", 20, 50))
 
 # Run get_article_content() on each element of a df -------------------------
 loop_it <- function(url_df) {
@@ -217,9 +218,18 @@ loop_it <- function(url_df) {
 
 # IMPLEMENTATION ## ----------------------------------------------------------
 
-# Save working news URLs to csv file
-write_csv(compile_urls("https://www.rt.com/news/", 500000), "data/rt_newsURLs.csv") 
+# Save working news URLs to csv files in groups of 100
+write_csv(compile_urls("https://www.rt.com/news/", 1, 100), "data/rt_newsURLs-1.csv")
+for(i in 1:5){
+  filename <- paste0("data/rt_newsURLs-", i+1, ".csv", "")
+  start <- i*100 +1
+  end <- (i+1)*100
+  
+  write_csv(compile_urls("https://www.rt.com/news/", start, end), filename)
+}
+
+# Store article content from valid URLs
+urls <- read_csv("data/rt_newsURLs-1.csv")
+suppressWarnings(write_csv(loop_it(urls),"data/rt_newsContent-1.csv"))
 
 # Save working op-ed URLs to csv file
-#write_csv(compile_urls("https://www.rt.com/news/", 500000), "data/rt_op-edURLs.csv") 
-
