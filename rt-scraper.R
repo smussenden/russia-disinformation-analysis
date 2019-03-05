@@ -194,7 +194,7 @@ compile_urls <- function(partial_url, num = 100) {
     } 
   }
   
-  urls <- urls[rowSums(is.na(urls)) != ncol(urls),]
+  urls <- urls[rowSums(is.na(urls)) != ncol(urls),] # Remove empty rows (aka failed URLs)
   
   # Return the final df of useable links
   return(urls)
