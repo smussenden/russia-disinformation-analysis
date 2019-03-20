@@ -153,11 +153,17 @@ get_article_content <- function(url) {
   # Quick tester
   #article_content <- tibble("Test" = id)
   
-  # Number the rows
+  # Clean-up
   article_content <- article_content %>%
+    # Number the rows
     mutate(Graph_Num = row_number()) %>%
     select(Graph_Num, everything()) %>% # rearanges to put Graph_Num first
-    mutate("Is_Tweet" = ifelse(str_detect(HTML, "dir=\"ltr\""), "Is_Tweet" <- TRUE, "Is_Tweet" <- FALSE)) %>% # flags whether native content or tweet
+    # Flag whether native content or tweet
+    mutate("Is_Tweet" = ifelse(str_detect(HTML, "dir=\"ltr\""), "Is_Tweet" <- TRUE, "Is_Tweet" <- FALSE)) %>% 
+    # Find empty content rows, with <p></p> in HTML
+    mutate("Is_Empty" = ifelse(str_detect(HTML, "<p></p>"), "Is_Empty" <- TRUE, "Is_Empty" <- FALSE)) %>%
+    filter(Is_Empty == FALSE) %>% # filters out empty rows
+    select(-one_of("Is_Empty")) %>% # drops Is_Empty col
     select(-one_of("HTML")) # drops HTML col
   
   return(article_content)
@@ -219,8 +225,8 @@ loop_it <- function(url_df) {
 # IMPLEMENTATION ## ----------------------------------------------------------
 
 # Save working news URLs to csv files in groups of 100
-write_csv(compile_urls("https://www.rt.com/news/", 1, 100), "data/rt_newsURLs-1.csv")
-for(i in 1:5){
+write_csv(compile_urls("https://www.rt.com/news/", 1, 100), "data/rt_newsURLs-1.csv") # first 100
+for(i in 1:5){ # 200-600
   filename <- paste0("data/rt_newsURLs-", i+1, ".csv", "")
   start <- i*100 +1
   end <- (i+1)*100
@@ -233,3 +239,7 @@ urls <- read_csv("data/rt_newsURLs-1.csv")
 suppressWarnings(write_csv(loop_it(urls),"data/rt_newsContent-1.csv"))
 
 # Save working op-ed URLs to csv file
+
+data <- read.csv("data/rt_newsContent-1.csv", na.strings = c("", "NA"))
+
+
